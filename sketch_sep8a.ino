@@ -6,10 +6,7 @@
 #define LCD_COLUMNS 16
 #define LCD_ROWS 2
 
-char a[] = "a";
-Alarm alarm1(1, 56);
-const char* formattedMinute = alarm1.getFormattedMinute();
-const char* formattedHour = alarm1.getFormattedHour();
+
 LiquidCrystal_I2C lcd(LCD_ADDRESS, LCD_COLUMNS, LCD_ROWS);
 
 void setup() {
@@ -20,8 +17,5 @@ void setup() {
 
 void loop() {
   delay(1000);
-    lcd.setCursor(0, 1);
-    lcd.print(String(formattedHour) + ":" + String(formattedMinute));
-    lcd.setCursor(0, 1);
 
 }
