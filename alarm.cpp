@@ -11,9 +11,9 @@ private:
     char formattedMinute[3];
 
 public:
-    Alarm(uint8_t hour, uint8_t minute) {
-        this->alarmHour = hour;
-        this->alarmMinute = minute;
+    Alarm() {
+        this->alarmHour = 0;
+        this->alarmMinute = 0;
         this->timeUnitIsHour = true;
         this->isAlarmActive = false;
         updateFormattedHour();
@@ -33,7 +33,7 @@ public:
     }
 
     bool getIsAlarmActive(){
-        return this->isAlarmActive();
+        return this->isAlarmActive;
     }
 
     uint8_t getAlarmHour() {
@@ -45,11 +45,11 @@ public:
     }
 
     const char* getFormattedHour() {
-        return formattedHour;
+        return this->formattedHour;
     }
 
     void updateFormattedHour() {
-        sprintf(formattedHour, "%02d", this->alarmHour);
+        sprintf(this->formattedHour, "%02d", this->alarmHour);
     }
 
     const char* getFormattedMinute() {
@@ -75,7 +75,7 @@ public:
     void toggleIsAlarmActive(){
         this->isAlarmActive = !this->isAlarmActive;
     }
-    
+
     void timeIncrementManager() {
         if (getConfigMode()) {
             increaseAlarmHour();
