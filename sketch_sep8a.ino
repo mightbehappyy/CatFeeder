@@ -8,8 +8,9 @@
 
 #define pinChangeModeButton 13
 #define pinConfigButton 12
-#define bounceTime 25
+#define bounceTime 50
 
+unsigned char previousButtonState = "HIGH";
 bool buttonState;
 static unsigned long buttonDelay = 0;
 
@@ -32,11 +33,10 @@ void setup() {
 }
 
 void loop() {
-  delay(1000);
+
   handleUserModeChange();
   handleUserConfigChange();
   handleDisplayMode();
-  delay(1000);
 }
 
 void initializeAlarms() {
@@ -46,7 +46,6 @@ void initializeAlarms() {
 }
 
 void displayAlarmInfo() {
-  lcd.clear();
   lcd.setCursor(0, 0);
   lcd.print("Alarm ");
   lcd.print(currentAlarmIndex + 1);
@@ -61,7 +60,6 @@ void displayAlarmInfo() {
 }
 
 void displayNextAlarmAndTime() {
-  lcd.clear();
   lcd.setCursor(0, 0);
   lcd.print(F("Nxt Alarm:"));
 
@@ -70,7 +68,6 @@ void displayNextAlarmAndTime() {
 }
 
 void displayPortionAmount() {
-  lcd.clear();
   lcd.setCursor(0, 0);
   lcd.print(F("Portion size:"));
   lcd.print(" ");
@@ -78,6 +75,12 @@ void displayPortionAmount() {
 }
 
 void handleDisplayMode() {
+  static uint8_t previousModeIndex = 255; 
+
+  if (currentModeIndex != previousModeIndex) {
+    lcd.clear();
+    previousModeIndex = currentModeIndex;
+  }
   if (currentModeIndex == 0) {
     displayNextAlarmAndTime();
   } else if (currentModeIndex == 1) {
@@ -89,19 +92,13 @@ void handleDisplayMode() {
 
 void handleUserModeChange() {
   if ((millis() - buttonDelay) > bounceTime) {
-    buttonState = digitalRead(pinChangeModeButton);
-    
-    Serial.print("Button State: ");
-    Serial.println(buttonState);
-    
-    if (buttonState == LOW) {
+    buttonState = digitalRead(pinChangeModeButton);    
+    if (buttonState == LOW && previousButtonState) {
       if (currentModeIndex < 2){
         currentModeIndex++;
       } else {
         currentModeIndex = 0;
       }
-
-      Serial.println("Mode Changed!");
       buttonDelay = millis();
     }
     
@@ -111,11 +108,7 @@ void handleUserModeChange() {
 void handleUserConfigChange() {
   if ((millis() - buttonDelay) > bounceTime) {
     buttonState = digitalRead(pinConfigButton);
-    
-    Serial.print("Button State: ");
-    Serial.println(buttonState);
-    
-     if (buttonState == LOW) {
+     if (buttonState == LOW && previousButtonState) {
       if (currentModeIndex == 1){
         if (currentAlarmIndex < 4){
           currentAlarmIndex++;
@@ -126,10 +119,8 @@ void handleUserConfigChange() {
       } else if (currentModeIndex == 2) {
         portionAmount++;
       }
-
-      Serial.println("Mode Changed!");
       buttonDelay = millis();
     }
-    
+    buttonState = previousButtonState;
   }
 }
