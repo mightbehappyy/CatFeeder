@@ -8,6 +8,7 @@
 
 #define pinChangeModeButton 13
 #define pinConfigButton 12
+#define pinActiveAlarm 11
 #define bounceTime 50
 
 unsigned char previousButtonState = "HIGH";
@@ -25,6 +26,7 @@ uint8_t portionAmount = 0;
 void setup() {
   pinMode(pinChangeModeButton, INPUT_PULLUP);
   pinMode(pinConfigButton, INPUT_PULLUP);
+  pinMode(pinActiveAlarm, INPUT_PULLUP);
   lcd.init();
   lcd.backlight();
   lcd.clear();
@@ -37,6 +39,7 @@ void loop() {
   handleUserModeChange();
   handleUserConfigChange();
   handleDisplayMode();
+  handleUserActiveAlarm();
 }
 
 void initializeAlarms() {
@@ -50,6 +53,13 @@ void displayAlarmInfo() {
   lcd.print("Alarm ");
   lcd.print(currentAlarmIndex + 1);
 
+  lcd.setCursor(8, 0);
+  if (alarms[currentAlarmIndex].getIsAlarmActive()){
+    lcd.print("Active  ");
+  } else {
+
+    lcd.print("Unactive");
+  }
   lcd.setCursor(0, 1);
   lcd.print("Hour: ");
   lcd.print(alarms[currentAlarmIndex].getFormattedHour());
@@ -126,5 +136,16 @@ void handleUserConfigChange() {
       buttonDelay = millis();
     }
     buttonState = previousButtonState;
+  }
+}
+void handleUserActiveAlarm() {
+  if((millis() - buttonDelay) > bounceTime) {
+    buttonState = digitalRead(pinActiveAlarm);
+    if (buttonState == LOW  && previousButtonState) {
+      Serial.print("Active");
+      if (currentModeIndex == 1) {
+        alarms[currentAlarmIndex].toggleIsAlarmActive();
+      } 
+    }
   }
 }
