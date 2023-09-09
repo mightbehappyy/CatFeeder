@@ -1,9 +1,17 @@
 #include <LiquidCrystal_I2C.h>
 #include <Wire.h>
 #include "Alarm.cpp" 
+
 #define LCD_ADDRESS 0x3F
 #define LCD_COLUMNS 16
 #define LCD_ROWS 2
+
+#define pinChangeModeButton 13
+#define pinConfigButton 12
+#define bounceTime 25
+
+bool buttonState;
+static unsigned long buttonDelay = 0;
 
 // Initializing LCD, address can change according to the Arduino/display you are using.
 LiquidCrystal_I2C lcd(LCD_ADDRESS, LCD_COLUMNS, LCD_ROWS);
@@ -14,19 +22,19 @@ uint8_t currentModeIndex = 0;
 uint8_t portionAmount = 0;    
 
 void setup() {
+  pinMode(pinChangeModeButton, INPUT_PULLUP);
+  pinMode(pinConfigButton, INPUT_PULLUP);
   lcd.init();
   lcd.backlight();
   lcd.clear();
   initializeAlarms();
+  Serial.begin(9600);
 }
 
 void loop() {
   delay(1000);
-  if (currentModeIndex < 2) {
-    currentModeIndex++;
-  } else {
-    currentModeIndex = 0;
-  }
+  handleUserModeChange();
+  handleUserConfigChange();
   handleDisplayMode();
   delay(1000);
 }
@@ -79,6 +87,49 @@ void handleDisplayMode() {
   }
 }
 
-void handleUserInput() {
+void handleUserModeChange() {
+  if ((millis() - buttonDelay) > bounceTime) {
+    buttonState = digitalRead(pinChangeModeButton);
+    
+    Serial.print("Button State: ");
+    Serial.println(buttonState);
+    
+    if (buttonState == LOW) {
+      if (currentModeIndex < 2){
+        currentModeIndex++;
+      } else {
+        currentModeIndex = 0;
+      }
 
+      Serial.println("Mode Changed!");
+      buttonDelay = millis();
+    }
+    
+  }
+}
+
+void handleUserConfigChange() {
+  if ((millis() - buttonDelay) > bounceTime) {
+    buttonState = digitalRead(pinConfigButton);
+    
+    Serial.print("Button State: ");
+    Serial.println(buttonState);
+    
+     if (buttonState == LOW) {
+      if (currentModeIndex == 1){
+        if (currentAlarmIndex < 4){
+          currentAlarmIndex++;
+        } else {
+          currentAlarmIndex = 0;
+        }
+       
+      } else if (currentModeIndex == 2) {
+        portionAmount++;
+      }
+
+      Serial.println("Mode Changed!");
+      buttonDelay = millis();
+    }
+    
+  }
 }
