@@ -33,7 +33,7 @@ void setup() {
 }
 
 void loop() {
-
+  delay(150);
   handleUserModeChange();
   handleUserConfigChange();
   handleDisplayMode();
@@ -70,7 +70,7 @@ void displayNextAlarmAndTime() {
 void displayPortionAmount() {
   lcd.setCursor(0, 0);
   lcd.print(F("Portion size:"));
-  lcd.print(" ");
+  lcd.print(F(" "));
   lcd.print(portionAmount);
 }
 
@@ -117,7 +117,11 @@ void handleUserConfigChange() {
         }
        
       } else if (currentModeIndex == 2) {
-        portionAmount++;
+        if (portionAmount < 5){
+          portionAmount++;
+        } else {
+          portionAmount = 0;
+        }
       }
       buttonDelay = millis();
     }
