@@ -22,6 +22,10 @@ bool modeButtonState;
 bool configModeButtonState;
 static unsigned long buttonDelay = 0;
 
+unsigned long previousMillis = 0;
+const long interval = 500; 
+bool showSpaces = true; 
+
 // Initializing LCD, address can change according to the Arduino/display you are using.
 LiquidCrystal_I2C lcd(LCD_ADDRESS, LCD_COLUMNS, LCD_ROWS);
 
@@ -49,8 +53,8 @@ void loop() {
   if (!configState) {
     handleUserModeChange();
     handleUserConfigChange();
-    handleDisplayMode();
     handleUserActiveAlarm();
+    handleDisplayMode();
   } else {
     handleUserInputForAlarm();
     displayAlarmInfo();
@@ -77,6 +81,7 @@ void displayAlarmInfo() {
     lcd.print("Unactive");
   }
   lcd.setCursor(0, 1);
+
   lcd.print(alarms[currentAlarmIndex].getFormattedHour());
 
   lcd.print(":");
@@ -88,6 +93,13 @@ void displayAlarmInfo() {
     lcd.print("ConfigMode");
   } else {
     lcd.print("          ");
+  }
+}
+
+void clearSpecificArea(LiquidCrystal_I2C &lcd, uint8_t col, uint8_t row, uint8_t numChars) {
+  lcd.setCursor(col, row);
+  for (uint8_t i = 0; i < numChars; i++) {
+    lcd.print(" "); // Print spaces to clear the area
   }
 }
 
@@ -187,11 +199,11 @@ void handleUserInputForAlarm() {
   if ((millis() - buttonDelay) > bounceTime) {
     modeButtonState = digitalRead(pinChangeModeButton);
     configButtonState = digitalRead(pinConfigButton);
-    if (configButtonState == LOW && previousConfigButtonState) {
+    if (modeButtonState == LOW && previousModeButtonState) {
       alarms[currentAlarmIndex].toggleConfigMode();
       buttonDelay = millis();
     }
-    if (modeButtonState == LOW && previousModeButtonState) {
+    if (configButtonState == LOW && previousConfigButtonState) {
       alarms[currentAlarmIndex].timeIncrementManager();
       buttonDelay = millis();
     }
