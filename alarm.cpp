@@ -83,6 +83,13 @@ public:
             increaseAlarmMinute();
         }
     }
+     void timeDecreaseManager() {
+        if (getConfigMode()) {
+            decreaseAlarmHour();
+        } else {
+            decreaseAlarmMinute();
+        }
+    }
 
     void increaseAlarmHour() {
         if (this->alarmHour == 23) {
@@ -99,6 +106,24 @@ public:
             this->alarmMinute = 0;
         } else {
             this->alarmMinute++;
+        }
+        updateFormattedMinute();
+    }
+     void decreaseAlarmHour() {
+        if (this->alarmHour == 0) {
+            this->alarmHour = 23;
+            updateFormattedHour();
+        } else {
+            this->alarmHour--;
+            updateFormattedHour();
+        }
+    }
+
+    void decreaseAlarmMinute() {
+        if (this->alarmMinute == 0) {
+            this->alarmMinute = 59;
+        } else {
+            this->alarmMinute--;
         }
         updateFormattedMinute();
     }

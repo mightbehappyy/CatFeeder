@@ -48,7 +48,7 @@ void setup() {
 }
 
 void loop() {
-  delay(150);
+  delay(100);
   displayConfigMode();
   if (!configState) {
     handleUserModeChange();
@@ -199,8 +199,13 @@ void handleUserInputForAlarm() {
   if ((millis() - buttonDelay) > bounceTime) {
     modeButtonState = digitalRead(pinChangeModeButton);
     configButtonState = digitalRead(pinConfigButton);
+    activeAlarmButtonState = digitalRead(pinActiveAlarm);
     if (modeButtonState == LOW && previousModeButtonState) {
       alarms[currentAlarmIndex].toggleConfigMode();
+      buttonDelay = millis();
+    }
+    if (activeAlarmButtonState == LOW && previousActiveAlarmButtonState) {
+      alarms[currentAlarmIndex].timeDecreaseManager();
       buttonDelay = millis();
     }
     if (configButtonState == LOW && previousConfigButtonState) {
