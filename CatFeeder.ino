@@ -76,6 +76,7 @@ void loop() {
     handleUserConfigChange();
     handleUserActiveAlarm();
     handleDisplayMode(now);
+    checkForAlarmTime();
   } else {
     handleUserInputForAlarm();
     displayAlarmInfo();
@@ -137,6 +138,17 @@ void displayAlarmInfo() {
   }
 }
 
+void checkForAlarmTime() {
+  for (uint8_t i = 0; i < 5; i++) {
+    if(alarms[i].getIsAlarmActive() && alarms[i].isAlarmTimeNow(rtc.now().hour(), rtc.now().minute())) {
+      
+      Serial.println("Alarm:");
+      Serial.print(i);
+      Serial.print("is ringing");
+    }
+   }
+}
+
 void clearSpecificArea(LiquidCrystal_I2C &lcd, uint8_t col, uint8_t row, uint8_t numChars) {
   lcd.setCursor(col, row);
   for (uint8_t i = 0; i < numChars; i++) {
@@ -191,7 +203,6 @@ void handleUserModeChange() {
       }
       buttonDelay = millis();
     }
-    
   }
 }
 
