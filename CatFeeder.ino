@@ -1,6 +1,7 @@
 #include <LiquidCrystal_I2C.h>
 #include <Wire.h>
 #include "Alarm.h"
+#include <RTClib.h>
 
 #define LCD_ADDRESS 0x3F
 #define LCD_COLUMNS 16
@@ -25,7 +26,7 @@ static unsigned long buttonDelay = 0;
 unsigned long previousMillis = 0;
 const long interval = 500; 
 bool showSpaces = true; 
-
+RTC_DS1307 rtc;
 // Initializing LCD, address can change according to the Arduino/display you are using.
 LiquidCrystal_I2C lcd(LCD_ADDRESS, LCD_COLUMNS, LCD_ROWS);
 
@@ -45,16 +46,36 @@ void setup() {
   lcd.clear();
   initializeAlarms();
   Serial.begin(9600);
+  #ifndef ESP8266
+  while (!Serial); // wait for serial port to connect. Needed for native USB
+#endif
+
+  if (! rtc.begin()) {
+    Serial.println("Couldn't find RTC");
+    Serial.flush();
+    while (1) delay(10);
+  }
+
+  if (! rtc.isrunning()) {
+    Serial.println("RTC is NOT running, let's set the time!");
+
+    rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
+
+  }
+
+ 
+
 }
 
 void loop() {
   delay(100);
+  DateTime now = rtc.now();
   displayConfigMode();
   if (!configState) {
     handleUserModeChange();
     handleUserConfigChange();
     handleUserActiveAlarm();
-    handleDisplayMode();
+    handleDisplayMode(now);
   } else {
     handleUserInputForAlarm();
     displayAlarmInfo();
@@ -123,12 +144,17 @@ void clearSpecificArea(LiquidCrystal_I2C &lcd, uint8_t col, uint8_t row, uint8_t
   }
 }
 
-void displayNextAlarmAndTime() {
+void displayNextAlarmAndTime(DateTime date) {
   lcd.setCursor(0, 0);
   lcd.print(F("Nxt Alarm:"));
 
   lcd.setCursor(0, 1);
   lcd.print(F("Time:"));
+  lcd.print(date.hour());
+  lcd.print(":");
+  lcd.print(date.minute());
+  lcd.print(":");
+  lcd.print(date.second());
 }
 
 void displayPortionAmount() {
@@ -138,7 +164,7 @@ void displayPortionAmount() {
   lcd.print(portionAmount);
 }
 
-void handleDisplayMode() {
+void handleDisplayMode(DateTime date) {
   static uint8_t previousModeIndex = 255; 
 
   if (currentModeIndex != previousModeIndex) {
@@ -146,7 +172,7 @@ void handleDisplayMode() {
     previousModeIndex = currentModeIndex;
   }
   if (currentModeIndex == 0) {
-    displayNextAlarmAndTime();
+    displayNextAlarmAndTime(date);
   } else if (currentModeIndex == 1) {
     displayAlarmInfo();
   } else {
