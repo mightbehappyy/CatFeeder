@@ -1,6 +1,6 @@
 #include <LiquidCrystal_I2C.h>
 #include <Wire.h>
-#include "Alarm.cpp" 
+#include "Alarm.h"
 
 #define LCD_ADDRESS 0x3F
 #define LCD_COLUMNS 16
@@ -80,17 +80,37 @@ void displayAlarmInfo() {
 
     lcd.print("Unactive");
   }
-  lcd.setCursor(0, 1);
 
+    if(configState) {
+      if(alarms[currentAlarmIndex].getConfigMode()) {
+      lcd.setCursor(6, 1);
+      lcd.print(" ");
+      lcd.setCursor(0, 1);
+      lcd.print(">");
+    } else {
+      lcd.setCursor(0, 1);
+      lcd.print(" ");
+      lcd.setCursor(6, 1);
+      lcd.print("<");
+    }
+  } else {
+    lcd.setCursor(0, 1);
+      lcd.print(" ");
+      lcd.setCursor(6, 1);
+      lcd.print(" ");
+  }
+  
+  lcd.setCursor(1, 1);
+  
   lcd.print(alarms[currentAlarmIndex].getFormattedHour());
 
   lcd.print(":");
   
   lcd.print(alarms[currentAlarmIndex].getFormattedMinute());
 
-  lcd.setCursor(6,1);
+  lcd.setCursor(8,1);
   if (configState) {
-    lcd.print("ConfigMode");
+    lcd.print("Config");
   } else {
     lcd.print("          ");
   }
