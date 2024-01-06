@@ -96,7 +96,7 @@ void displayAlarmInfo() {
     lcd.print("Active  ");
   } else {
 
-    lcd.print("Unactive");
+    lcd.print("Inactive");
   }
 
   if (configState) {
