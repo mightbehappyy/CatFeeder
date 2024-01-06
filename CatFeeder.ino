@@ -24,17 +24,17 @@ bool configModeButtonState;
 static unsigned long buttonDelay = 0;
 
 unsigned long previousMillis = 0;
-const long interval = 500; 
-bool showSpaces = true; 
+const long interval = 500;
+bool showSpaces = true;
 RTC_DS1307 rtc;
 // Initializing LCD, address can change according to the Arduino/display you are using.
 LiquidCrystal_I2C lcd(LCD_ADDRESS, LCD_COLUMNS, LCD_ROWS);
 
 Alarm alarms[5];
 uint8_t currentAlarmIndex = 0;
-uint8_t currentModeIndex = 0; 
-uint8_t portionAmount = 0; 
-bool configState = false;   
+uint8_t currentModeIndex = 0;
+uint8_t portionAmount = 0;
+bool configState = false;
 
 void setup() {
   pinMode(pinChangeModeButton, INPUT_PULLUP);
@@ -46,25 +46,22 @@ void setup() {
   lcd.clear();
   initializeAlarms();
   Serial.begin(9600);
-  #ifndef ESP8266
-  while (!Serial); // wait for serial port to connect. Needed for native USB
+#ifndef ESP8266
+  while (!Serial)
+    ;  // wait for serial port to connect. Needed for native USB
 #endif
 
-  if (! rtc.begin()) {
+  if (!rtc.begin()) {
     Serial.println("Couldn't find RTC");
     Serial.flush();
     while (1) delay(10);
   }
 
-  if (! rtc.isrunning()) {
+  if (!rtc.isrunning()) {
     Serial.println("RTC is NOT running, let's set the time!");
 
     rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
-
   }
-
- 
-
 }
 
 void loop() {
@@ -81,7 +78,6 @@ void loop() {
     handleUserInputForAlarm();
     displayAlarmInfo();
   }
-
 }
 
 void initializeAlarms() {
@@ -96,15 +92,15 @@ void displayAlarmInfo() {
   lcd.print(currentAlarmIndex + 1);
 
   lcd.setCursor(8, 0);
-  if (alarms[currentAlarmIndex].getIsAlarmActive()){
+  if (alarms[currentAlarmIndex].getIsAlarmActive()) {
     lcd.print("Active  ");
   } else {
 
     lcd.print("Unactive");
   }
 
-    if(configState) {
-      if(alarms[currentAlarmIndex].getConfigMode()) {
+  if (configState) {
+    if (alarms[currentAlarmIndex].getConfigMode()) {
       lcd.setCursor(6, 1);
       lcd.print(" ");
       lcd.setCursor(0, 1);
@@ -117,20 +113,20 @@ void displayAlarmInfo() {
     }
   } else {
     lcd.setCursor(0, 1);
-      lcd.print(" ");
-      lcd.setCursor(6, 1);
-      lcd.print(" ");
+    lcd.print(" ");
+    lcd.setCursor(6, 1);
+    lcd.print(" ");
   }
-  
+
   lcd.setCursor(1, 1);
-  
+
   lcd.print(alarms[currentAlarmIndex].getFormattedHour());
 
   lcd.print(":");
-  
+
   lcd.print(alarms[currentAlarmIndex].getFormattedMinute());
 
-  lcd.setCursor(8,1);
+  lcd.setCursor(8, 1);
   if (configState) {
     lcd.print("Config");
   } else {
@@ -140,33 +136,69 @@ void displayAlarmInfo() {
 
 void checkForAlarmTime() {
   for (uint8_t i = 0; i < 5; i++) {
-    if(alarms[i].getIsAlarmActive() && alarms[i].isAlarmTimeNow(rtc.now().hour(), rtc.now().minute())) {
-      
-      Serial.println("Alarm:");
-      Serial.print(i);
-      Serial.print("is ringing");
+    if (alarms[i].getIsAlarmActive() && alarms[i].isAlarmTimeNow(rtc.now().hour(), rtc.now().minute())) {
+      if (rtc.now().second() < portionAmount + 1) {
+        Serial.println("Alarm:");
+        Serial.print(i);
+        Serial.print("is ringing");
+      }
     }
-   }
-}
-
-void clearSpecificArea(LiquidCrystal_I2C &lcd, uint8_t col, uint8_t row, uint8_t numChars) {
-  lcd.setCursor(col, row);
-  for (uint8_t i = 0; i < numChars; i++) {
-    lcd.print(" "); // Print spaces to clear the area
   }
 }
 
+Alarm checkForNextAlarm() {
+    Alarm closestAlarm; 
+    DateTime now = rtc.now(); 
+
+    int closestTimeDifference = 9999;
+
+    for (uint8_t i = 0; i < 5; i++) {
+        if (alarms[i].getIsAlarmActive()) {
+            int hourDifference = alarms[i].getAlarmHour() - now.hour();
+            int minuteDifference = alarms[i].getAlarmMinute() - now.minute();
+
+            int absoluteDifference = abs(hourDifference * 60 + minuteDifference);
+
+            if (absoluteDifference < closestTimeDifference) {
+                closestTimeDifference = absoluteDifference;
+                closestAlarm = alarms[i];
+            }
+        }
+    }
+
+    return closestAlarm;
+}
+
+
+
 void displayNextAlarmAndTime(DateTime date) {
-  lcd.setCursor(0, 0);
-  lcd.print(F("Nxt Alarm:"));
 
   lcd.setCursor(0, 1);
-  lcd.print(F("Time:"));
+  lcd.print(F("Next Meal "));
+  Alarm nextAlarm = checkForNextAlarm();
+
+  if(nextAlarm.isValid()) {
+    lcd.print(nextAlarm.getFormattedHour());
+  lcd.print(":");
+  lcd.print(nextAlarm.getFormattedMinute());
+  } else {
+    lcd.print("None");
+  }
+
+  lcd.setCursor(0, 0);
+  if (date.hour() < 10) {
+    lcd.print("0");
+  }
   lcd.print(date.hour());
-  lcd.print(":");
+  if (date.second() % 2 == 0) {
+    lcd.print(" ");
+  } else {
+    lcd.print(":");
+  }
+  if (date.minute() < 10) {
+    lcd.print("0");
+  }
   lcd.print(date.minute());
-  lcd.print(":");
-  lcd.print(date.second());
 }
 
 void displayPortionAmount() {
@@ -177,7 +209,7 @@ void displayPortionAmount() {
 }
 
 void handleDisplayMode(DateTime date) {
-  static uint8_t previousModeIndex = 255; 
+  static uint8_t previousModeIndex = 255;
 
   if (currentModeIndex != previousModeIndex) {
     lcd.clear();
@@ -194,9 +226,9 @@ void handleDisplayMode(DateTime date) {
 
 void handleUserModeChange() {
   if ((millis() - buttonDelay) > bounceTime) {
-    modeButtonState = digitalRead(pinChangeModeButton);    
+    modeButtonState = digitalRead(pinChangeModeButton);
     if (modeButtonState == LOW && previousModeButtonState) {
-      if (currentModeIndex < 2){
+      if (currentModeIndex < 2) {
         currentModeIndex++;
       } else {
         currentModeIndex = 0;
@@ -209,16 +241,16 @@ void handleUserModeChange() {
 void handleUserConfigChange() {
   if ((millis() - buttonDelay) > bounceTime) {
     configButtonState = digitalRead(pinConfigButton);
-     if (configButtonState == LOW && previousModeButtonState == HIGH) {
-      if (currentModeIndex == 1){
-        if (currentAlarmIndex < 4){
+    if (configButtonState == LOW && previousModeButtonState == HIGH) {
+      if (currentModeIndex == 1) {
+        if (currentAlarmIndex < 4) {
           currentAlarmIndex++;
         } else {
           currentAlarmIndex = 0;
         }
-       
+
       } else if (currentModeIndex == 2) {
-        if (portionAmount < 5){
+        if (portionAmount < 5) {
           portionAmount++;
         } else {
           portionAmount = 0;
@@ -231,15 +263,16 @@ void handleUserConfigChange() {
 }
 
 void handleUserActiveAlarm() {
-  if((millis() - buttonDelay) > bounceTime) {
+  if ((millis() - buttonDelay) > bounceTime) {
     activeAlarmButtonState = digitalRead(pinActiveAlarm);
-    if (activeAlarmButtonState == LOW  && previousActiveAlarmButtonState) {
+    if (activeAlarmButtonState == LOW && previousActiveAlarmButtonState) {
       if (currentModeIndex == 1) {
         alarms[currentAlarmIndex].toggleIsAlarmActive();
-      } 
+      }
     }
   }
 }
+
 void displayConfigMode() {
   if ((millis() - buttonDelay) > bounceTime) {
     configModeButtonState = digitalRead(pinActiveConfigModeButton);
@@ -271,4 +304,3 @@ void handleUserInputForAlarm() {
     }
   }
 }
-
