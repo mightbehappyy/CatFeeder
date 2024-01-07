@@ -147,26 +147,32 @@ void checkForAlarmTime() {
 }
 
 Alarm checkForNextAlarm() {
-    Alarm closestAlarm; 
-    DateTime now = rtc.now(); 
+  Alarm closestAlarm;
+  DateTime now = rtc.now();
 
-    int closestTimeDifference = 9999;
+  int closestTimeDifference = 9999;
 
-    for (uint8_t i = 0; i < 5; i++) {
-        if (alarms[i].getIsAlarmActive()) {
-            int hourDifference = alarms[i].getAlarmHour() - now.hour();
-            int minuteDifference = alarms[i].getAlarmMinute() - now.minute();
-
-            int absoluteDifference = abs(hourDifference * 60 + minuteDifference);
-
-            if (absoluteDifference < closestTimeDifference) {
-                closestTimeDifference = absoluteDifference;
-                closestAlarm = alarms[i];
-            }
+  for (uint8_t i = 0; i < 5; i++) {
+    if (alarms[i].getIsAlarmActive()) {
+      int hourDifference = alarms[i].getAlarmHour() - now.hour();
+      int minuteDifference = alarms[i].getAlarmMinute() - now.minute();
+      if (hourDifference <= 0) {
+        hourDifference = 23 + hourDifference;
+        if (minuteDifference <= 0) {
+          minuteDifference = 60 + minuteDifference;
         }
-    }
+      }
 
-    return closestAlarm;
+      int absoluteDifference = abs(hourDifference * 60 + minuteDifference);
+
+      if (absoluteDifference < closestTimeDifference) {
+        closestTimeDifference = absoluteDifference;
+        closestAlarm = alarms[i];
+      }
+    }
+  }
+
+  return closestAlarm;
 }
 
 
@@ -177,10 +183,10 @@ void displayNextAlarmAndTime(DateTime date) {
   lcd.print(F("Next Meal "));
   Alarm nextAlarm = checkForNextAlarm();
 
-  if(nextAlarm.isValid()) {
+  if (nextAlarm.isValid()) {
     lcd.print(nextAlarm.getFormattedHour());
-  lcd.print(":");
-  lcd.print(nextAlarm.getFormattedMinute());
+    lcd.print(":");
+    lcd.print(nextAlarm.getFormattedMinute());
   } else {
     lcd.print("None");
   }

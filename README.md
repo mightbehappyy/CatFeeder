@@ -75,7 +75,7 @@ Os botões são conectados à placa do Arduino utilizando os digital pins 13, 12
 - [x] Implementação das telas
 - [x] Comprar RTC DS1307 
 - [X] Adicionar checagem de horário
-- [ ] Adicionar checagem de alarme mais próximo
+- [X] Adicionar checagem de alarme mais próximo
 - [ ] Comprar relé e implementar sua lógica
 - [ ] Comprar motor e fazer conexão com o relé
 - [ ] Criar uma estrutura para o Cat Feeder
