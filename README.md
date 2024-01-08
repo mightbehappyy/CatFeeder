@@ -51,7 +51,7 @@ Existem 4 botões que você utiliza para realizar estas operações, segue abaix
 
 ![configAlarmes2](https://github.com/mightbehappyy/CatFeeder/assets/97134972/b3ce625a-d958-49ed-82c2-a802300b27e4)
 ## Montagem
-Os botões são conectados à placa do Arduino utilizando os digital pins 13, 12, 11 e 10. Já o RTC DS1307 e o display [I2C](http://www.univasf.edu.br/~romulo.camara/novo/wp-content/uploads/2013/11/Barramento-e-Protocolo-I2C.pdf) estão conectados aos analog pins A4 e A5 e a porta de 5V. Como ambos utilizam o protocolo I2C é necessário descobrir o endereço I2C do display que pode mudar conforme o display e o microcontrolador, neste caso o endereço do meu display é 0X3F. No futuro, a definição do endereço será dinâmica. Neste ponto do projeto, ainda não há relé para o controle do motor que será responsável por liberar a ração do dispenser.
+Os botões são conectados à placa do Arduino utilizando as portas digitais 13, 12, 11 e 10. Já o RTC DS1307 e o display [I2C](http://www.univasf.edu.br/~romulo.camara/novo/wp-content/uploads/2013/11/Barramento-e-Protocolo-I2C.pdf) estão conectados às portas analógicas A4 e A5 e à porta de 5V. Como ambos utilizam o protocolo I2C, é necessário descobrir o endereço I2C do display que pode mudar conforme o display e o microcontrolador, neste caso o endereço do meu display é 0X3F. No futuro, a definição do endereço será dinâmica. Neste ponto do projeto, ainda não há relé para o controle do motor que será responsável por liberar a ração do dispenser.
 
 ### Modulos utilizados
 >Arduino UNO
@@ -79,6 +79,7 @@ Os botões são conectados à placa do Arduino utilizando os digital pins 13, 12
 - [ ] Comprar relé e implementar sua lógica
 - [ ] Comprar motor e fazer conexão com o relé
 - [ ] Criar uma estrutura para o Cat Feeder
+- [ ] Refatoração do código
 
 
 ## Tecnologias

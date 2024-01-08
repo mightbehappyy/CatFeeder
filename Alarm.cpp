@@ -122,7 +122,5 @@ void Alarm::decreaseAlarmMinute() {
 
 
 bool Alarm::isValid() {
-  // Add your logic here to determine if the alarm is valid or not
-  // For example, checking if it's active or if the hour and minute are within valid ranges
   return (getIsAlarmActive() && (getAlarmHour() >= 0 && alarmHour < 24) && (getAlarmMinute() >= 0 && getAlarmMinute() < 60));
 }

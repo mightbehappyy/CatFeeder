@@ -2,7 +2,7 @@
 #include <Wire.h>
 #include "Alarm.h"
 #include <RTClib.h>
-
+#include "ButtonB.h"
 #define LCD_ADDRESS 0x3F
 #define LCD_COLUMNS 16
 #define LCD_ROWS 2
@@ -23,12 +23,18 @@ bool modeButtonState;
 bool configModeButtonState;
 static unsigned long buttonDelay = 0;
 
+
+bool hasActionBeenPerformed = false;
+
+
+
 unsigned long previousMillis = 0;
 const long interval = 500;
 bool showSpaces = true;
 RTC_DS1307 rtc;
 // Initializing LCD, address can change according to the Arduino/display you are using.
 LiquidCrystal_I2C lcd(LCD_ADDRESS, LCD_COLUMNS, LCD_ROWS);
+ButtonB buttonB(pinActiveAlarm);
 
 Alarm alarms[5];
 uint8_t currentAlarmIndex = 0;
@@ -37,6 +43,7 @@ uint8_t portionAmount = 0;
 bool configState = false;
 
 void setup() {
+  buttonB.setPinMode();
   pinMode(pinChangeModeButton, INPUT_PULLUP);
   pinMode(pinConfigButton, INPUT_PULLUP);
   pinMode(pinActiveAlarm, INPUT_PULLUP);
@@ -269,24 +276,15 @@ void handleUserConfigChange() {
 }
 
 void handleUserActiveAlarm() {
-  if ((millis() - buttonDelay) > bounceTime) {
-    activeAlarmButtonState = digitalRead(pinActiveAlarm);
-    if (activeAlarmButtonState == LOW && previousActiveAlarmButtonState) {
-      if (currentModeIndex == 1) {
-        alarms[currentAlarmIndex].toggleIsAlarmActive();
-      }
-    }
-  }
+    buttonB.activateAlarm(currentModeIndex, currentAlarmIndex, alarms);
 }
 
 void displayConfigMode() {
   if ((millis() - buttonDelay) > bounceTime) {
     configModeButtonState = digitalRead(pinActiveConfigModeButton);
-    if (configModeButtonState == LOW && previousActiveConfigModeButtonState) {
-      if (currentModeIndex == 1) {
+    if (configModeButtonState == LOW && currentModeIndex == 1) { 
         configState = !configState;
         buttonDelay = millis();
-      }
     }
   }
 }
