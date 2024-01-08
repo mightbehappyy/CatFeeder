@@ -1,16 +1,18 @@
 #include "Arduino.h"
 #include "Alarm.h"
-#include "ButtonB.h"
+#include "ButtonD.h"
 #include "Button.h"
 
-ButtonB::ButtonB(const unsigned char pin)
+ButtonD::ButtonD(const unsigned char pin)
   : Button(pin) {}
 
-void ButtonB::activateAlarm(uint8_t currentModeIndex, uint8_t currentAlarmIndex, Alarm *alarms) {
+bool ButtonD::switchToConfigMode(bool isInConfigMode, uint8_t currentModeIndex) {
   if (!getButtonState() && currentModeIndex == 1 && !isPressed()) {
-    alarms[currentAlarmIndex].toggleIsAlarmActive();
     setIsButtonPressed(true);
+    return !isInConfigMode;
+
   } else if (getButtonState()) {
     setIsButtonPressed(false);
   }
+  return isInConfigMode;
 }

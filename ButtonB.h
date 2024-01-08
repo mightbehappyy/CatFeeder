@@ -1,8 +1,8 @@
 #ifndef ButtonB_H
 #define ButtonB_H
 
-#include "Button.h" 
-#include "Alarm.h"  
+#include "Button.h"
+#include "Alarm.h"
 
 class ButtonB : public Button {
 public:

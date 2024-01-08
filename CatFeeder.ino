@@ -3,6 +3,7 @@
 #include "Alarm.h"
 #include <RTClib.h>
 #include "ButtonB.h"
+#include "ButtonD.h"
 #define LCD_ADDRESS 0x3F
 #define LCD_COLUMNS 16
 #define LCD_ROWS 2
@@ -35,7 +36,7 @@ RTC_DS1307 rtc;
 // Initializing LCD, address can change according to the Arduino/display you are using.
 LiquidCrystal_I2C lcd(LCD_ADDRESS, LCD_COLUMNS, LCD_ROWS);
 ButtonB buttonB(pinActiveAlarm);
-
+ButtonD buttonD(pinActiveConfigModeButton);
 Alarm alarms[5];
 uint8_t currentAlarmIndex = 0;
 uint8_t currentModeIndex = 0;
@@ -44,6 +45,7 @@ bool configState = false;
 
 void setup() {
   buttonB.setPinMode();
+  buttonD.setPinMode();
   pinMode(pinChangeModeButton, INPUT_PULLUP);
   pinMode(pinConfigButton, INPUT_PULLUP);
   pinMode(pinActiveAlarm, INPUT_PULLUP);
@@ -276,35 +278,27 @@ void handleUserConfigChange() {
 }
 
 void handleUserActiveAlarm() {
-    buttonB.activateAlarm(currentModeIndex, currentAlarmIndex, alarms);
+  buttonB.activateAlarm(currentModeIndex, currentAlarmIndex, alarms);
 }
 
 void displayConfigMode() {
-  if ((millis() - buttonDelay) > bounceTime) {
-    configModeButtonState = digitalRead(pinActiveConfigModeButton);
-    if (configModeButtonState == LOW && currentModeIndex == 1) { 
-        configState = !configState;
-        buttonDelay = millis();
-    }
-  }
+    configState = buttonD.switchToConfigMode(configState, currentModeIndex);
 }
 
 void handleUserInputForAlarm() {
-  if ((millis() - buttonDelay) > bounceTime) {
-    modeButtonState = digitalRead(pinChangeModeButton);
-    configButtonState = digitalRead(pinConfigButton);
-    activeAlarmButtonState = digitalRead(pinActiveAlarm);
-    if (modeButtonState == LOW && previousModeButtonState) {
-      alarms[currentAlarmIndex].toggleConfigMode();
-      buttonDelay = millis();
-    }
-    if (activeAlarmButtonState == LOW && previousActiveAlarmButtonState) {
-      alarms[currentAlarmIndex].timeDecreaseManager();
-      buttonDelay = millis();
-    }
-    if (configButtonState == LOW && previousConfigButtonState) {
-      alarms[currentAlarmIndex].timeIncrementManager();
-      buttonDelay = millis();
-    }
+  modeButtonState = digitalRead(pinChangeModeButton);
+  configButtonState = digitalRead(pinConfigButton);
+  activeAlarmButtonState = digitalRead(pinActiveAlarm);
+  if (modeButtonState == LOW) {
+    alarms[currentAlarmIndex].toggleConfigMode();
+    buttonDelay = millis();
+  }
+  if (activeAlarmButtonState == LOW) {
+    alarms[currentAlarmIndex].timeDecreaseManager();
+    buttonDelay = millis();
+  }
+  if (configButtonState == LOW) {
+    alarms[currentAlarmIndex].timeIncrementManager();
+    buttonDelay = millis();
   }
 }
