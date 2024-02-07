@@ -14,3 +14,8 @@ void ButtonB::activateAlarm(uint8_t currentModeIndex, uint8_t currentAlarmIndex,
     setIsButtonPressed(false);
   }
 }
+void ButtonB::decreaseAlarmTime(uint8_t currentAlarmIndex, Alarm *alarms) {
+  if (!getButtonState() && !isPressed()) {
+    alarms[currentAlarmIndex].timeDecreaseManager();
+  }
+}

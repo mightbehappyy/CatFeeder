@@ -5,6 +5,7 @@
 #include "ButtonB.h"
 #include "ButtonD.h"
 #include "ButtonC.h"
+#include "ButtonA.h"
 #define LCD_ADDRESS 0x3F
 #define LCD_COLUMNS 16
 #define LCD_ROWS 2
@@ -16,17 +17,13 @@
 #define bounceTime 50
 
 unsigned char previousModeButtonState = HIGH;
-unsigned char previousActiveAlarmButtonState = HIGH;
-unsigned char previousConfigButtonState = HIGH;
-unsigned char previousActiveConfigModeButtonState = HIGH;
+
 bool configButtonState;
 bool activeAlarmButtonState;
 bool modeButtonState;
-bool configModeButtonState;
 static unsigned long buttonDelay = 0;
 
 
-bool hasActionBeenPerformed = false;
 
 
 
@@ -36,9 +33,12 @@ bool showSpaces = true;
 RTC_DS1307 rtc;
 // Initializing LCD, address can change according to the Arduino/display you are using.
 LiquidCrystal_I2C lcd(LCD_ADDRESS, LCD_COLUMNS, LCD_ROWS);
+
 ButtonB buttonB(pinActiveAlarm);
 ButtonC buttonC(pinChangeModeButton);
 ButtonD buttonD(pinActiveConfigModeButton);
+ButtonA buttonA(pinConfigButton);
+
 Alarm alarms[5];
 uint8_t currentAlarmIndex = 0;
 uint8_t currentModeIndex = 0;
@@ -49,6 +49,7 @@ void setup() {
   buttonB.setPinMode();
   buttonD.setPinMode();
   buttonC.setPinMode();
+  buttonA.setPinMode();
   pinMode(pinChangeModeButton, INPUT_PULLUP);
   pinMode(pinConfigButton, INPUT_PULLUP);
   pinMode(pinActiveAlarm, INPUT_PULLUP);
@@ -192,7 +193,7 @@ Alarm checkForNextAlarm() {
 void displayNextAlarmAndTime(DateTime date) {
 
   lcd.setCursor(0, 1);
-  lcd.print(F("Next Meal "));
+  lcd.print(F("Next Meal: "));
   Alarm nextAlarm = checkForNextAlarm();
 
   if (nextAlarm.isValid()) {
@@ -243,9 +244,9 @@ void handleDisplayMode(DateTime date) {
 }
 
 void handleUserConfigChange() {
-  if ((millis() - buttonDelay) > bounceTime) {
+  
     configButtonState = digitalRead(pinConfigButton);
-    if (configButtonState == LOW && previousModeButtonState == HIGH) {
+    if (configButtonState == LOW) {
       if (currentModeIndex == 1) {
         if (currentAlarmIndex < 4) {
           currentAlarmIndex++;
@@ -260,11 +261,10 @@ void handleUserConfigChange() {
           portionAmount = 0;
         }
       }
-      buttonDelay = millis();
     }
     configButtonState = previousModeButtonState;
   }
-}
+
 
 
 void handleUserModeChange() {  
@@ -279,17 +279,8 @@ void displayConfigMode() {
   configState = buttonD.switchToConfigMode(configState, currentModeIndex);
 }
 
-void handleUserInputForAlarm() {
-  modeButtonState = digitalRead(pinChangeModeButton);
-  configButtonState = digitalRead(pinConfigButton);
-  activeAlarmButtonState = digitalRead(pinActiveAlarm);
-  if (modeButtonState == LOW) {
-    alarms[currentAlarmIndex].toggleConfigMode();
-  }
-  if (activeAlarmButtonState == LOW) {
-    alarms[currentAlarmIndex].timeDecreaseManager();
-  }
-  if (configButtonState == LOW) {
-    alarms[currentAlarmIndex].timeIncrementManager();
-  }
+void handleUserInputForAlarm() {  
+  buttonC.toggleAlarmTimeUnit(currentAlarmIndex, alarms);
+  buttonB.decreaseAlarmTime(currentAlarmIndex, alarms);
+  buttonA.increaseAlarmTime(currentAlarmIndex, alarms);
 }
