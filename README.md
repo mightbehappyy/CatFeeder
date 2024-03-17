@@ -76,7 +76,7 @@ Os botões são conectados à placa do Arduino utilizando as portas digitais 13,
 - [x] Comprar RTC DS1307 
 - [X] Adicionar checagem de horário
 - [X] Adicionar checagem de alarme mais próximo
-- [ ] Comprar relé e implementar sua lógica
+- [X] Comprar relé e implementar sua lógica
 - [ ] Comprar motor e fazer conexão com o relé
 - [ ] Criar uma estrutura para o Cat Feeder
 - [ ] Refatoração do código
