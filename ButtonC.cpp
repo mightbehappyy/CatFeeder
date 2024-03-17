@@ -19,6 +19,7 @@ uint8_t ButtonC::switchScreen(uint8_t currentModeIndex) {
   }
   return currentModeIndex;
 }
+
 void ButtonC::toggleAlarmTimeUnit(uint8_t currentAlarmIndex, Alarm *alarms) {
   if (!getButtonState() && !isPressed()) {
     alarms[currentAlarmIndex].toggleConfigMode();

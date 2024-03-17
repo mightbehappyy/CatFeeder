@@ -6,6 +6,7 @@
 #include "ButtonD.h"
 #include "ButtonC.h"
 #include "ButtonA.h"
+#include "relay.cpp"
 #define LCD_ADDRESS 0x3F
 #define LCD_COLUMNS 16
 #define LCD_ROWS 2
@@ -14,25 +15,13 @@
 #define pinConfigButton 12
 #define pinActiveAlarm 11
 #define pinActiveConfigModeButton 10
-#define bounceTime 50
 
-unsigned char previousModeButtonState = HIGH;
-
+#define relayPin 9
 bool configButtonState;
-bool activeAlarmButtonState;
-bool modeButtonState;
-static unsigned long buttonDelay = 0;
 
-
-
-
-
-unsigned long previousMillis = 0;
-const long interval = 500;
-bool showSpaces = true;
 RTC_DS1307 rtc;
-// Initializing LCD, address can change according to the Arduino/display you are using.
 LiquidCrystal_I2C lcd(LCD_ADDRESS, LCD_COLUMNS, LCD_ROWS);
+Relay motorRelay(relayPin, LOW);
 
 ButtonB buttonB(pinActiveAlarm);
 ButtonC buttonC(pinChangeModeButton);
@@ -50,18 +39,15 @@ void setup() {
   buttonD.setPinMode();
   buttonC.setPinMode();
   buttonA.setPinMode();
-  pinMode(pinChangeModeButton, INPUT_PULLUP);
+  motorRelay.setPinMode();
   pinMode(pinConfigButton, INPUT_PULLUP);
-  pinMode(pinActiveAlarm, INPUT_PULLUP);
-  pinMode(pinActiveConfigModeButton, INPUT_PULLUP);
   lcd.init();
   lcd.backlight();
   lcd.clear();
   initializeAlarms();
   Serial.begin(9600);
 #ifndef ESP8266
-  while (!Serial)
-    ;  // wait for serial port to connect. Needed for native USB
+  while (!Serial);  // wait for serial port to connect. Needed for native USB
 #endif
 
   if (!rtc.begin()) {
@@ -150,12 +136,15 @@ void displayAlarmInfo() {
 void checkForAlarmTime() {
   for (uint8_t i = 0; i < 5; i++) {
     if (alarms[i].getIsAlarmActive() && alarms[i].isAlarmTimeNow(rtc.now().hour(), rtc.now().minute())) {
-      if (rtc.now().second() < portionAmount + 1) {
+      while (rtc.now().second() < portionAmount + 1) {
         Serial.println("Alarm:");
         Serial.print(i);
         Serial.print("is ringing");
+        motorRelay.activate();
       }
+      motorRelay.deactivate();
     }
+    
   }
 }
 
@@ -169,7 +158,7 @@ Alarm checkForNextAlarm() {
     if (alarms[i].getIsAlarmActive()) {
       int hourDifference = alarms[i].getAlarmHour() - now.hour();
       int minuteDifference = alarms[i].getAlarmMinute() - now.minute();
-      if (hourDifference <= 0) {
+      if (hourDifference <= 0 && minuteDifference < 0) {
         hourDifference = 23 + hourDifference;
         if (minuteDifference <= 0) {
           minuteDifference = 60 + minuteDifference;
@@ -177,13 +166,13 @@ Alarm checkForNextAlarm() {
       }
 
       int absoluteDifference = abs(hourDifference * 60 + minuteDifference);
-
       if (absoluteDifference < closestTimeDifference) {
         closestTimeDifference = absoluteDifference;
         closestAlarm = alarms[i];
       }
     }
   }
+  
 
   return closestAlarm;
 }
@@ -244,7 +233,6 @@ void handleDisplayMode(DateTime date) {
 }
 
 void handleUserConfigChange() {
-  
     configButtonState = digitalRead(pinConfigButton);
     if (configButtonState == LOW) {
       if (currentModeIndex == 1) {
@@ -253,7 +241,6 @@ void handleUserConfigChange() {
         } else {
           currentAlarmIndex = 0;
         }
-
       } else if (currentModeIndex == 2) {
         if (portionAmount < 5) {
           portionAmount++;
@@ -262,10 +249,7 @@ void handleUserConfigChange() {
         }
       }
     }
-    configButtonState = previousModeButtonState;
   }
-
-
 
 void handleUserModeChange() {  
     currentModeIndex = buttonC.switchScreen(currentModeIndex);
